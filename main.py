@@ -6,6 +6,10 @@ import leaderboard
 import pygame
 import sys
 
+#copilot1 = making the keyboard preview
+#copilot2 = adding the guitar strings and hbd
+#copilot3 = slowing hbd and adding a score and shrinking keyboard preview and adding arrows to guitar string buttons
+
 #initialize pygame
 pygame.init()
 
@@ -158,7 +162,7 @@ while isGameRunning:  #copilot3
         fadeSurface.fill((0, 0, 0))  #copilot3
         fadeSurface.set_alpha(fadeAlpha)  #copilot3
         screen.blit(fadeSurface, (0, 0))  #copilot3
-    pygame.display.flip()  #copilot3
-    clock.tick(60)  #copilot3
-pygame.quit()  #copilot3
-sys.exit()  #copilot3
+    pygame.display.flip()
+    clock.tick(60)
+pygame.quit()
+sys.exit()
