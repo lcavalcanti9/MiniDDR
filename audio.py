@@ -99,20 +99,22 @@ def _build_song_sound():  #copilot2
     return _song_sound[_selected_song]  #copilot3
 
 
-def start_playback():  #copilot2
-    """Synthesize and start the chart's Happy Birthday sample song."""  #copilot2
-    global _song_channel, _start_ticks  #copilot2
-    sound = _build_song_sound()  #copilot2
-    _song_channel = sound.play()  #copilot2
-    _start_ticks = pygame.time.get_ticks() if _song_channel else None  #copilot2
-    return _start_ticks is not None  #copilot2
+def start_playback():  #copilot4
+    """Start a clean playback of the selected chart's synthesized sample."""  #copilot4
+    global _song_channel, _start_ticks  #copilot4
+    if _song_channel is not None:  #copilot4
+        _song_channel.stop()  #copilot4
+    sound = _build_song_sound()  #copilot4
+    _song_channel = sound.play()  #copilot4
+    _start_ticks = pygame.time.get_ticks() if _song_channel else None  #copilot4
+    return _start_ticks is not None  #copilot4
 
 
-def current_time():  #copilot2
-    """Return elapsed playback time in seconds (zero before playback starts)."""  #copilot2
-    if _start_ticks is None:  #copilot2
-        return 0.0  #copilot2
-    return min((pygame.time.get_ticks() - _start_ticks) / 1000.0, _song_duration)  #copilot2
+def current_time():  #copilot4
+    """Return elapsed playback time in seconds (zero before playback starts)."""  #copilot4
+    if _start_ticks is None:  #copilot4
+        return 0.0  #copilot4
+    return min((pygame.time.get_ticks() - _start_ticks) / 1000.0, _song_duration)  #copilot4
 
 
 def current_beat():  #copilot2
@@ -124,3 +126,22 @@ def get_visible_notes(lookahead_beats=5.0):  #copilot2
     """Return notes within the visible beat window, with their beat and lane."""  #copilot2
     beat_now = current_beat()  #copilot2
     return [dict(note) for note in _chart_notes if beat_now - 0.2 <= note["beat"] <= beat_now + lookahead_beats]  #copilot2
+
+
+def get_chart_notes():  #copilot4
+    """Return a stable copy of all notes in this song's chart."""  #copilot4
+    return [dict(note) for note in _chart_notes]  #copilot4
+
+
+def get_song_duration():  #copilot4
+    """Return the synthesized song duration in seconds."""  #copilot4
+    return _song_duration  #copilot4
+
+
+def stop_playback():  #copilot4
+    """Stop current playback and clear its timing state before a replay."""  #copilot4
+    global _song_channel, _start_ticks  #copilot4
+    if _song_channel is not None:  #copilot4
+        _song_channel.stop()  #copilot4
+    _song_channel = None  #copilot4
+    _start_ticks = None  #copilot4
