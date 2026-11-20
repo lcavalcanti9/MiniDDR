@@ -61,16 +61,16 @@ finalGrade = "F"  #copilot4
 
 def grade_for_score(points, maximum):  #copilot4
     percentage = points / maximum if maximum else 0.0  #copilot4
-    if percentage >= 0.90:  #copilot4
-        return "S"  #copilot4
-    if percentage >= 0.80:  #copilot4
-        return "A"  #copilot4
-    if percentage >= 0.70:  #copilot4
-        return "B"  #copilot4
-    if percentage >= 0.60:  #copilot4
-        return "C"  #copilot4
-    if percentage >= 0.50:  #copilot4
-        return "D"  #copilot4
+    if percentage >= 0.80:  #copilot4 #copilot5
+        return "S"  #copilot4 #copilot5
+    if percentage >= 0.65:  #copilot5
+        return "A"  #copilot4 #copilot5
+    if percentage >= 0.50:  #copilot4 #copilot5
+        return "B"  #copilot4 #copilot5
+    if percentage >= 0.35:  #copilot5
+        return "C"  #copilot4 #copilot5
+    if percentage >= 0.20:  #copilot5
+        return "D"  #copilot4 #copilot5
     return "F"  #copilot4
 
 
@@ -95,37 +95,38 @@ while isGameRunning:  #copilot3
             elif scene == "name_input" and event.key == pygame.K_h and pygame.key.get_pressed()[pygame.K_SPACE]:  #copilot4
                 score = 0  #copilot4
                 scoredNotes = set()  #copilot4
-                waitingForNotes = False  #copilot4
+                waitingForNotes = True  #copilot5
                 audio.stop_playback()  #copilot4
+                audio.select_song(selectedSong)  #copilot5
                 attemptNumber = leaderboard.begin_attempt(songNames[selectedSong])  #copilot4
                 bufferStartTicks = pygame.time.get_ticks()  #copilot4
-                scene = "buffer"  #copilot4
+                audio.start_playback(delay=5.0)  #copilot5
+                scene = "playing"  #copilot5
             elif scene == "name_input" and event.key == pygame.K_BACKSPACE:  #copilot4
                 playerName = playerName[:-1]  #copilot4
             elif scene == "name_input" and len(playerName) < 10 and event.unicode and "a" <= event.unicode <= "z":  #copilot4
                 playerName += event.unicode  #copilot4
-            elif scene == "playing" and event.key in laneKeys:  #copilot4
+            elif scene == "playing" and event.key in laneKeys and not waitingForNotes:  #copilot5
                 beatNow = audio.current_beat()  #copilot4
-                matching = [(abs(note["beat"] - beatNow), index, note) for index, note in enumerate(audio.get_chart_notes()) if note["lane"] == laneKeys.index(event.key) + 1 and (index, note["beat"], note["lane"]) not in scoredNotes and abs(note["beat"] - beatNow) <= 0.5]  #copilot4
+                matching = [(abs(note["beat"] - beatNow), index, note) for index, note in enumerate(audio.get_chart_notes()) if note["lane"] == laneKeys.index(event.key) + 1 and (index, note["beat"], note["lane"]) not in scoredNotes]  #copilot5
                 if matching:  #copilot4
                     timingError, noteIndex, hitNote = min(matching, key=lambda item: item[0])  #copilot3
-                    if timingError <= 0.5:  #copilot3
-                        award = max(1, int(200 * (1 - timingError / 0.5)))  #copilot3
-                        score += award  #copilot3
+                    if timingError <= 0.75:  #copilot5
+                        award = max(1, int(250 * (1 - timingError / 0.75)))  #copilot5
+                        score += award  #copilot4
                         scoredNotes.add((noteIndex, hitNote["beat"], hitNote["lane"]))  #copilot4
-            elif scene == "score" and event.key == pygame.K_SPACE:  #copilot4
-                scene = "selection"  #copilot4
-            elif scene == "score" and event.key == pygame.K_t:  #copilot4
-                scene = "selection"  #copilot4
+            elif scene == "score" and event.key == pygame.K_SPACE:  #copilot5
+                scene = "leaderboard"  #copilot5
+            elif scene == "score" and event.key == pygame.K_t:  #copilot4 #copilot5
+                scene = "leaderboard"  #copilot5
+            elif scene == "leaderboard" and event.key in (pygame.K_SPACE, pygame.K_t):  #copilot5
+                scene = "selection"  #copilot5
     pressedKeys = pygame.key.get_pressed()  #copilot1
-    if scene == "buffer" and pygame.time.get_ticks() - bufferStartTicks >= 5000:  #copilot4
-        audio.select_song(selectedSong)  #copilot4
-        audio.start_playback()  #copilot4
-        waitingForNotes = False  #copilot4
-        scene = "playing"  #copilot4
-    if scene == "playing" and audio.current_time() >= audio.get_song_duration():  #copilot4
-        maximumScore = len(audio.get_chart_notes()) * 200  #copilot4
-        finalGrade = grade_for_score(score, maximumScore)  #copilot4
+    if scene == "playing" and waitingForNotes and pygame.time.get_ticks() - bufferStartTicks >= 5000:  #copilot5
+        waitingForNotes = False  #copilot5
+    if scene == "playing" and not waitingForNotes and audio.current_time() >= audio.get_song_duration():  #copilot5
+        maximumScore = len(audio.get_chart_notes()) * 250  #copilot5
+        finalGrade = grade_for_score(score, maximumScore)  #copilot5
         leaderboard.record_result(songNames[selectedSong], playerName, attemptNumber, score, maximumScore, finalGrade)  #copilot4
         scene = "score"  #copilot4
     shakePower = max(0.0, shakePower - 0.035)  #copilot3
@@ -134,13 +135,25 @@ while isGameRunning:  #copilot3
     canvas.fill((22, 43, 118))  #copilot3
     if scene == "selection":  #copilot3
         title = menuFont.render("SONG SELECTION", True, (255, 255, 255))  #copilot3
-        canvas.blit(title, title.get_rect(center=(screenWidth // 2, 145)))  #copilot3
-        instruction = font.render("T / B to choose    H + SPACE to play", True, (210, 220, 245))  #copilot3
-        canvas.blit(instruction, instruction.get_rect(center=(screenWidth // 2, 215)))  #copilot3
+        canvas.blit(title, title.get_rect(center=(screenWidth // 2, 75)))  #copilot5
+        instruction = smallFont.render("T / B to choose    H + SPACE to play", True, (210, 220, 245))  #copilot5
+        canvas.blit(instruction, instruction.get_rect(center=(screenWidth // 2, 125)))  #copilot5
         for songIndex, songName in enumerate(songNames):  #copilot3
             songColor = (255, 220, 90) if songIndex == selectedSong else (180, 195, 225)  #copilot3
             songText = font.render((">  " if songIndex == selectedSong else "    ") + songName, True, songColor)  #copilot3
-            canvas.blit(songText, songText.get_rect(center=(screenWidth // 2, 300 + songIndex * 52)))  #copilot3
+            canvas.blit(songText, songText.get_rect(center=(screenWidth // 2, 185 + songIndex * 42)))  #copilot5
+        songMetadata = audio.get_song_metadata(songNames[selectedSong])  #copilot5
+        metadataText = smallFont.render(f"{songMetadata['difficulty']} - {songMetadata['description']}", True, (220, 230, 250))  #copilot5
+        canvas.blit(metadataText, metadataText.get_rect(center=(screenWidth // 2, 285)))  #copilot5
+        leaderboardTitle = scoreFont.render("LEADERBOARD", True, (255, 220, 90))  #copilot5
+        canvas.blit(leaderboardTitle, leaderboardTitle.get_rect(center=(screenWidth // 2, 325)))  #copilot5
+        selectedEntries = leaderboard.get_entries(songNames[selectedSong])[:7]  #copilot5
+        if not selectedEntries:  #copilot5
+            emptyLeaderboardText = smallFont.render("No completed runs yet", True, (190, 200, 220))  #copilot5
+            canvas.blit(emptyLeaderboardText, emptyLeaderboardText.get_rect(center=(screenWidth // 2, 355)))  #copilot5
+        for entryIndex, entry in enumerate(selectedEntries):  #copilot5
+            entryText = smallFont.render(f"{entry['attempt']}. {entry['name'] or '(no name)'}   {entry['score']}   Grade {entry['grade']}", True, (220, 230, 250))  #copilot5
+            canvas.blit(entryText, entryText.get_rect(center=(screenWidth // 2, 355 + entryIndex * 25)))  #copilot5
     elif scene == "name_input":  #copilot4
         canvas.fill((0, 0, 0))  #copilot4
         inputTitle = menuFont.render("Enter player name", True, (255, 255, 255))  #copilot4
@@ -149,11 +162,6 @@ while isGameRunning:  #copilot3
         canvas.blit(nameText, nameText.get_rect(center=(screenWidth // 2, 310)))  #copilot4
         inputInstruction = smallFont.render("a-z only, up to 10 letters; H + SPACE to start", True, (190, 190, 190))  #copilot4
         canvas.blit(inputInstruction, inputInstruction.get_rect(center=(screenWidth // 2, 360)))  #copilot4
-    elif scene == "buffer":  #copilot4
-        canvas.fill((0, 0, 0))  #copilot4
-        bufferSeconds = max(0, 5 - (pygame.time.get_ticks() - bufferStartTicks) // 1000)  #copilot4
-        bufferText = menuFont.render(f"Get ready: {bufferSeconds}", True, (255, 255, 255))  #copilot4
-        canvas.blit(bufferText, bufferText.get_rect(center=(screenWidth // 2, screenHeight // 2)))  #copilot4
     elif scene == "playing":  #copilot4
         beatNow = audio.current_beat()  #copilot3
         pygame.draw.polygon(canvas, (37, 58, 135), [(350, stringTopY), (450, stringTopY), (650, stringBottomY), (150, stringBottomY)])  #copilot3
@@ -176,22 +184,23 @@ while isGameRunning:  #copilot3
             pygame.draw.polygon(canvas, arrowColor, arrowPoints)  #copilot3
             buttonLetter = smallFont.render(laneLabels[laneIndex], True, (255, 255, 255))  #copilot3
             canvas.blit(buttonLetter, buttonLetter.get_rect(center=(cx, cy + 17)))  #copilot3
-        for noteIndex, note in enumerate(audio.get_visible_notes(noteTravelBeats)):  #copilot4
-            noteId = (noteIndex, note["beat"], note["lane"])  #copilot4
-            if noteId in scoredNotes:  #copilot3
-                continue  #copilot3
-            laneIndex = note["lane"] - 1  #copilot3
-            progress = 1 - (note["beat"] - beatNow) / noteTravelBeats  #copilot3
-            progress = max(0.0, min(1.0, progress))  #copilot3
-            noteX = laneTopX[laneIndex] + (laneBottomX[laneIndex] - laneTopX[laneIndex]) * progress  #copilot3
-            noteY = stringTopY + (stringBottomY - stringTopY) * progress  #copilot3
-            noteRadius = int(9 + progress * 15)  #copilot3
-            noteColor = tuple(int(95 + (channel - 95) * progress) for channel in laneColors[laneIndex])  #copilot4
-            noteAlpha = int(55 + 200 * progress)  #copilot4
-            noteSurface = pygame.Surface((noteRadius * 2 + 4, noteRadius * 2 + 4), pygame.SRCALPHA)  #copilot4
-            pygame.draw.circle(noteSurface, (*noteColor, noteAlpha), (noteRadius + 2, noteRadius + 2), noteRadius)  #copilot4
-            pygame.draw.circle(noteSurface, (255, 255, 255, noteAlpha), (noteRadius + 2, noteRadius + 2), noteRadius, 2)  #copilot4
-            canvas.blit(noteSurface, (int(noteX) - noteRadius - 2, int(noteY) - noteRadius - 2))  #copilot4
+        if not waitingForNotes:  #copilot5
+            for noteIndex, note in enumerate(audio.get_visible_notes(noteTravelBeats)):  #copilot5
+                noteId = (noteIndex, note["beat"], note["lane"])  #copilot4
+                if noteId in scoredNotes:  #copilot3
+                    continue  #copilot3
+                laneIndex = note["lane"] - 1  #copilot3
+                progress = 1 - (note["beat"] - beatNow) / noteTravelBeats  #copilot3
+                progress = max(0.0, min(1.0, progress))  #copilot3
+                noteX = laneTopX[laneIndex] + (laneBottomX[laneIndex] - laneTopX[laneIndex]) * progress  #copilot3
+                noteY = stringTopY + (stringBottomY - stringTopY) * progress  #copilot3
+                noteRadius = int(9 + progress * 15)  #copilot3
+                noteColor = tuple(int(95 + (channel - 95) * progress) for channel in laneColors[laneIndex])  #copilot4
+                noteAlpha = int(55 + 200 * progress)  #copilot4
+                noteSurface = pygame.Surface((noteRadius * 2 + 4, noteRadius * 2 + 4), pygame.SRCALPHA)  #copilot4
+                pygame.draw.circle(noteSurface, (*noteColor, noteAlpha), (noteRadius + 2, noteRadius + 2), noteRadius)  #copilot4
+                pygame.draw.circle(noteSurface, (255, 255, 255, noteAlpha), (noteRadius + 2, noteRadius + 2), noteRadius, 2)  #copilot4
+                canvas.blit(noteSurface, (int(noteX) - noteRadius - 2, int(noteY) - noteRadius - 2))  #copilot4
         scoreText = scoreFont.render(f"{score:06d}", True, (255, 255, 255))  #copilot3
         canvas.blit(scoreText, scoreText.get_rect(topright=(screenWidth - 24, 20)))  #copilot3
         for index, (label, keyCode) in enumerate(padKeys):  #copilot3
@@ -210,16 +219,33 @@ while isGameRunning:  #copilot3
         pygame.draw.rect(canvas, (230, 230, 240), spaceRect, 2, border_radius=6)  #copilot3
         spaceText = smallFont.render("SPACE (THUMB)", True, (255, 255, 255))  #copilot3
         canvas.blit(spaceText, spaceText.get_rect(center=spaceRect.center))  #copilot3
+        if waitingForNotes:  #copilot5
+            countdown = max(0, 5 - (pygame.time.get_ticks() - bufferStartTicks) // 1000)  #copilot5
+            countdownText = font.render(f"Get ready: {countdown}", True, (255, 255, 255))  #copilot5
+            canvas.blit(countdownText, countdownText.get_rect(center=(screenWidth // 2, 130)))  #copilot5
     elif scene == "score":  #copilot4
         canvas.fill((0, 0, 0))  #copilot4
         resultTitle = menuFont.render("SONG COMPLETE", True, (255, 255, 255))  #copilot4
         canvas.blit(resultTitle, resultTitle.get_rect(center=(screenWidth // 2, 130)))  #copilot4
-        resultLines = [f"Song: {songNames[selectedSong]}", f"Player: {playerName or '(no name)'}", f"Attempt: {attemptNumber}", f"Score: {score}", f"Grade: {finalGrade}"]  #copilot4
+        resultLines = [f"Song: {songNames[selectedSong]}", f"Player: {playerName or '(no name)' }", f"Attempt: {attemptNumber}", f"Score: {score}", f"Grade: {finalGrade}"]  #copilot5
         for resultIndex, resultLine in enumerate(resultLines):  #copilot4
             resultText = font.render(resultLine, True, (255, 220, 90) if resultLine.startswith("Grade:") else (220, 230, 250))  #copilot4
             canvas.blit(resultText, resultText.get_rect(center=(screenWidth // 2, 220 + resultIndex * 48)))  #copilot4
-        returnText = smallFont.render("SPACE to return to song selection", True, (190, 190, 190))  #copilot4
-        canvas.blit(returnText, returnText.get_rect(center=(screenWidth // 2, 500)))  #copilot4
+        returnText = smallFont.render("SPACE to view leaderboard", True, (190, 190, 190))  #copilot5
+        canvas.blit(returnText, returnText.get_rect(center=(screenWidth // 2, 500)))  #copilot5
+    elif scene == "leaderboard":  #copilot5
+        canvas.fill((0, 0, 0))  #copilot5
+        resultTitle = menuFont.render(f"{songNames[selectedSong]} LEADERBOARD", True, (255, 255, 255))  #copilot5
+        canvas.blit(resultTitle, resultTitle.get_rect(center=(screenWidth // 2, 105)))  #copilot5
+        leaderboardEntries = leaderboard.get_entries(songNames[selectedSong])[:10]  #copilot5
+        if not leaderboardEntries:  #copilot5
+            emptyText = font.render("No completed runs yet", True, (220, 230, 250))  #copilot5
+            canvas.blit(emptyText, emptyText.get_rect(center=(screenWidth // 2, 220)))  #copilot5
+        for entryIndex, entry in enumerate(leaderboardEntries):  #copilot5
+            entryText = smallFont.render(f"Attempt {entry['attempt']}   {entry['name'] or '(no name)'}   Score {entry['score']}   Grade {entry['grade']}", True, (220, 230, 250))  #copilot5
+            canvas.blit(entryText, entryText.get_rect(center=(screenWidth // 2, 180 + entryIndex * 32)))  #copilot5
+        continueText = smallFont.render("SPACE or T to return to song selection / next attempt", True, (190, 190, 190))  #copilot5
+        canvas.blit(continueText, continueText.get_rect(center=(screenWidth // 2, 550)))  #copilot5
     screen.fill((0, 0, 0))  #copilot3
     screen.blit(canvas, (shakeX, shakeY))  #copilot3
     pygame.display.flip()
