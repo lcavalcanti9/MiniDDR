@@ -9,6 +9,8 @@ import sys
 #copilot1 = making the keyboard preview
 #copilot2 = adding the guitar strings and hbd
 #copilot3 = slowing hbd and adding a score and shrinking keyboard preview and adding arrows to guitar string buttons
+#copilot4 = added name writing, leaderboard, colors and opacity of notes on the lanes
+#copilot5 = fixing copilot4 and making a new practice melody
 
 #initialize pygame
 pygame.init()
